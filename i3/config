@@ -193,6 +193,9 @@ bindsym $mod+r mode "resize"
 bindsym $mod+w exec ~/.config/rofi/launchers/theme/launcher.sh
 bindsym $mod+e exec ~/.config/rofi/applets/bin/powermenu.sh
 
+#screenshot keybind 
+bindsym $mod+p exec scrot ~/Pictures/%Y-%m-%d_%H:%M:%S.png
+
 #rofi color switch
 #bindsym $mod+t exec ~/.config/polybar/cuts/scripts/style-switch.sh
 #bindsym $mod+y exec ~/.config/polybar/cuts/scripts/color-switch.sh
