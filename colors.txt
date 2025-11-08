@@ -1,0 +1,13 @@
+#light colors
+white-pink: #f5e0dc
+light-pink: #f2cdcd
+normal-pink: #f5c2e7
+bold-pink: #eba0ac
+purple: #cba6f7
+red: #f38ba8
+
+#dark colors
+light-dark: #313244
+mid-dark: #1e1e2e
+bold-dark: 181825
+
