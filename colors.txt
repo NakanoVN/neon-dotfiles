@@ -1,3 +1,4 @@
+--- neon theme ---
 #light colors
 white-pink: #f5e0dc
 light-pink: #f2cdcd
@@ -10,4 +11,12 @@ red: #f38ba8
 light-dark: #313244
 mid-dark: #1e1e2e
 bold-dark: 181825
+
+--- dark theme ----
+#light colors
+flamingo: #f0c6c6
+lavender: #b7bdf8
+
+#dark colors
+black: #000000
 

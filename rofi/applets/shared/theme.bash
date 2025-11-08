@@ -2,8 +2,8 @@
 
 ## Available Styles
 #
-## dark     blue   arc     catppuccin    tokyonight
-## light    neon   black   dracula
+## dark     blue   arc     catppuccin    tokyonight   minimalist
+## light    neon   black   dracula       melissa
 
 type="$HOME/.config/rofi/applets/themes"
 style='melissa.rasi'
