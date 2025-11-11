@@ -1,0 +1,120 @@
+# vim unable to open swap file issue
+E303: Unable to open swap file for <filename>, recovery impossible
+
+# solution
+-- Permissions issue on tmpfs
+-- You might’ve mounted your tmpfs (like /tmp, /var/tmp, or ~/.cache)
+   without correct ownership.
+-- Check permissions:
+ls -ld /tmp /var/tmp /home/$USER/.cache
+
+-- They should look like:
+drwxrwxrwt  /tmp
+drwxrwxrwt  /var/tmp
+drwx------  /home/yourusername/.cache
+
+-- If not, fix with:
+sudo chmod 1777 /tmp /var/tmp
+sudo chown -R $USER:$USER ~/.cache
+
+-- explanation:
+- sudo chmod 1777 /tmp /var/tmp
+This makes /tmp and /var/tmp safe public temporary folders — 
+all users and programs can write there, but only delete their own files.
+Linux expects this exact setting on /tmp and /var/tmp.
+
+- sudo chown -R $USER:$USER ~/.cache
+This gives full ownership of your ~/.cache directory (and its contents) to your current user.
+That’s why Betterlockscreen and editors could write there afterward.
+
+# How to make it automatic (recommended)
+# Create a small systemd service
+sudo nano /etc/systemd/system/fix-tmpfs-perms.service
+
+-- add this line:
+[Unit]
+Description=Fix tmpfs permissions for user cache and tmp directories
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c "chmod 1777 /tmp /var/tmp && chown -R 1000:1000 /home/yourusername/.cache"
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
+-- Then enable it:
+sudo systemctl enable fix-tmpfs-perms.service
+
+-- Now it’ll automatically fix permissions every time your Arch USB boots.
+
+--------------------------------------------------
+
+# Betterlockscreen issue
+# Create a new permanent folder
+# This folder lives on your USB (not in tmpfs), so it’ll persist after reboot.
+mkdir -p ~/.local/share/betterlockscreen
+
+# Move the existing cache there
+# If your wallpaper cache still exists in RAM:
+mv ~/.cache/betterlockscreen/* ~/.local/share/betterlockscreen/
+
+-- Then remove the old tmpfs folder to avoid confusion:
+rm -rf ~/.cache/betterlockscreen
+
+# Create a symlink (shortcut) back to it
+ln -s ~/.local/share/betterlockscreen ~/.cache/betterlockscreen
+
+-- Now, even though the tmpfs clears .cache each boot,
+   that symlink will still point to your persistent folder.
+
+
+# persistent Betterlockscreen symlink
+# If the symlink gets deleted at boot because .cache is recreated by tmpfs,
+# add a line to your systemd user service:
+
+# Create the service file
+mkdir -p ~/.config/systemd/user
+nano ~/.config/systemd/user/betterlockscreen-symlink.service
+
+-- add this line:
+[Unit]
+Description=Ensure Betterlockscreen cache symlink exists
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'mkdir -p ~/.local/share/betterlockscreen; if [ ! -L ~/.cache/betterlockscreen ]; then rm -rf ~/.cache/betterlockscreen; ln -s ~/.local/share/betterlockscreen ~/.cache/betterlockscreen; fi'
+
+[Install]
+WantedBy=default.target
+
+# Enable and start it
+systemctl --user enable betterlockscreen-symlink.service
+systemctl --user start betterlockscreen-symlink.service
+
+-- This ensures:
+-- At every login, systemd checks if ~/.cache/betterlockscreen exists as a symlink.
+-- If not, it recreates it automatically.
+
+# Verify it works
+# After reboot, check:
+ls -l ~/.cache | grep betterlockscreen
+
+-- You should see:
+betterlockscreen -> /home/yourusername/.local/share/betterlockscreen
+
+# (Optional) Check service status
+# If it says “active (exited)” — that’s perfect.
+systemctl --user status betterlockscreen-symlink.service
+
+
+
+
+
+
+
+
+
+

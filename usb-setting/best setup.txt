@@ -1,0 +1,240 @@
+1. ZRAM
+sudo pacman -S zram-generator
+sudo nano /etc/systemd/zram-generator.conf
+
+-- inside the file write:
+[zram0]
+zram-size = ram / 2
+compression-algorithm = zstd
+swap-priority = 100
+fs-type = swap (Optional)
+
+# disable zswap
+sudo nano /etc/default/grub
+
+-- change this line:
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet zswap.enabled=0"
+
+# update the GRUB configuration
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+
+# reboot and verify
+# after rebooting, you can check the active swap devices:
+# you should see an entry for /dev/zram0
+swapon --show
+systemctl status /dev/zram0
+
+# check compression algorithm
+# output should include zstd with [*] around it
+cat /sys/block/zram0/comp_algorithm
+
+# swapon example output
+NAME		TYPE		SIZE	USED	PRIO
+/dev/zram0	partition	973M	0B	100
+# NAME = your zram device (/dev/zram0)
+# TYPE = it's being used as a swap partition
+# SIZE = total compressed swap space available
+# USED = how much is currently in use
+# PRIO = priority - higher = preferred swap
+
+---------------------------------------------
+
+2. Mount temp & logs in RAM
+sudo nano /etc/fstab
+
+-- add this line inside the file:
+UUID=XXXX-XXXX /boot vfat defaults,noatime 0 2
+UUID=YYYY-YYYY / ext4 defaults,noatime,commit=600,errors=remount-ro 0 1
+
+# Store temporary data in RAM
+tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0
+tmpfs /var/tmp tmpfs defaults,noatime,mode=1777 0 0
+
+# Store logs in RAM
+tmpfs /var/log tmpfs defaults,noatime,mode=0755 0 0
+
+# Optional: store user cache in RAM (replace <yourusername>)
+tmpfs /home/<yourusername>/.cache tmpfs defaults,noatime,mode=700 0 0
+
+-- To find the UUID for / and /boot use "lsblk -f"
+####################
+
+# Check for syntax errors
+# Before rebooting, always test your new /etc/fstab:
+# If it returns no errors, that means your fstab is valid and all mount points work fine.
+# If you see any error (like “wrong fs type” or “UUID not found”), fix it before rebooting, or your system might fail to boot.
+sudo mount -a
+sudo systemctl daemon-reload
+
+# Check system performance impact
+# You’ll see RAM-based mounts and zram active.
+df -h | grep tmpfs
+swapon --show
+
+# confirm tmpfs is mounted in RAM
+df -hT | grep tmpfs
+
+-- You should see something like:
+Filesystem	type   Size  Used  Avail  Use%	Mounted on
+tmpfs   	tmpfs  3.8G  4.0M  3.8G   1% 	/tmp
+tmpfs   	tmpfs  3.8G  2.0M  3.8G   1% 	/var/log
+tmpfs   	tmpfs  3.8G  1.5M  3.8G   1% 	/var/tmp
+tmpfs   	tmpfs  3.8G  500K  3.8G   1% 	/home/yourusername/.cache
+
+-- The Type column should say tmpfs
+-- The Size should roughly match your RAM, not your USB storage
+-- This proves those folders are mounted in memory.
+# Check the actual filesystem type
+mount | grep tmpfs
+
+-- Expected output (example):
+tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noatime)
+tmpfs on /var/log type tmpfs (rw,nosuid,nodev,noatime)
+
+-- This shows that /tmp, /var/log, etc. are mounted as tmpfs (RAM-based).
+
+# Optional sanity check
+# Try writing a small file:
+echo "test" > /tmp/testfile
+ls -l /tmp/testfile
+
+-- Then reboot.
+-- If /tmp/testfile disappears after reboot → perfect!
+-- That confirms /tmp is volatile and stored in RAM (not persistent on USB).
+
+# Reboot to apply cleanly
+sudo reboot
+
+---------------------------
+
+3.Limit systemcd journal logs
+sudo mkdir -p /etc/systemd/journald.conf.d
+sudo nano /etc/systemd/journald.conf.d/volatile.conf
+
+-- add this line inside the file:
+[Journal]
+Storage=volatile
+RuntimeMaxUse=50M
+SystemMaxUse=50M
+Compress=yes
+
+# Confirm journald is running with the new settings
+sudo systemctl restart systemd-journald
+systemctl status systemd-journald
+
+# Check where logs are stored
+journalctl --disk-usage
+
+-- You should see output like:
+Archived and active journals take up 12.0M in total.
+
+-- If this number stays under your limit (50M), your setting is working.
+
+# Verify storage type
+systemctl status systemd-journald | grep Storage
+
+-- If it doesn’t show directly, you can confirm by checking where logs are stored:
+ls /var/log/journal
+
+-- If the folder does not exist → Storage=volatile is active 
+   (logs stored in /run/log/journal, i.e. in RAM).
+
+-- If /var/log/journal exists and grows → logs are stored persistently (on USB).
+
+---------------------------------------------------------
+
+4.Clear pacman cache automatically
+sudo pacman -S pacman-contrib
+
+# Enable the cleanup timer
+sudo systemctl enable --now paccache.timer
+
+# Then check if it’s running:
+systemctl status paccache.timer
+
+-- You should see something like:
+Loaded: loaded (/usr/lib/systemd/system/paccache.timer; enabled; preset: disabled)
+Active: active (waiting) since ...
+Triggers: paccache.service
+
+# (Optional) check when it runs
+# By default, it runs weekly.
+# To check its schedule:
+systemctl list-timers | grep paccache
+
+-- expected output: 
+Mon 2025-11-10 00:00:00 WIB  8h left   ...  paccache.timer
+
+-- This means:
+-- The next cleanup will happen on Monday, Nov 10 at midnight (00:00 WIB).
+-- 8h left = it’s scheduled to trigger in about 8 hours.
+-- The timer is active and waiting — systemd will automatically run paccache.service at that time.
+
+## (Optional) make it more aggressive
+## If you want to keep only 1 old version instead of 3 (safer for USBs and small drives), you can create a drop-in override:
+sudo systemctl edit paccache.service
+
+-- Then add:
+[Service]
+ExecStart=
+ExecStart=/usr/bin/paccache -rk1
+
+-- Then reload systemd:
+sudo systemctl daemon-reload
+
+-- Now it will only keep 1 version per package, not 3.
+
+## (optional) Run the cleanup manually
+sudo systemctl start paccache.service
+
+-- Confirm it worked
+journalctl -u paccache.service --no-pager | tail -n 10
+
+-- You should see something like:
+paccache[1234]: removed 45 packages (500.00 MiB freed)
+systemd[1]: paccache.service: Deactivated successfully.
+
+## (Optional) check your pacman cache size
+## If it’s small (a few hundred MB at most), then your cleanup is successful.
+du -sh /var/cache/pacman/pkg
+
+-- If you want to confirm what packages remain, list them:
+-- You’ll see only the most recent 1–3 versions per package, depending on your configuration.
+ls /var/cache/pacman/pkg | head
+
+--------------------------------------
+5.Disable unwanted service
+# For man-db and mlocate:
+sudo systemctl disable --now man-db.timer
+sudo systemctl disable --now updatedb.timer
+
+# For systemd-timesync
+sudo systemctl disable --now systemd-timesyncd.service
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
