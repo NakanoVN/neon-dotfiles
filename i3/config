@@ -49,7 +49,7 @@ floating_modifier $mod
 tiling_drag modifier titlebar
 
 # start a terminal
-bindsym $mod+Return exec st
+bindsym $mod+Return exec --no-startup-id st
 
 # kill focused window
 bindsym $mod+q kill
@@ -190,8 +190,8 @@ mode "resize" {
 bindsym $mod+r mode "resize"
 
 #rofi keybinds
-bindsym $mod+w exec ~/.config/rofi/launchers/theme/launcher.sh
-bindsym $mod+e exec ~/.config/rofi/applets/bin/powermenu.sh
+bindsym $mod+w exec --no-startup-id ~/.config/rofi/launchers/theme/launcher.sh
+bindsym $mod+e exec --no-startup-id ~/.config/rofi/applets/bin/powermenu.sh
 
 #screenshot keybind 
 bindsym $mod+p exec scrot ~/Pictures/%Y-%m-%d_%H:%M:%S.png
@@ -240,9 +240,8 @@ gaps outer 15
 #background apps
 exec_always feh --bg-fill ~/.config/wallpapers/neon/jujutsu-girl.jpg
 #exec_always --no-startup-id killall polybar
-#exec_always --no-startup-id sleep 1 && polybar main &
-exec_always --no-startup-id killall polybar
-exec_always --no-startup-id sleep 1 && polybar &
+#exec_always --no-startup-id sleep 1 && polybar &
+exec_always --no-startup-id ~/.config/polybar/forest/launch.sh &
 exec_always --no-startup-id xcompmgr -c -t-5 -l-5 -r4.2 -o.55 -f -D 2 &
 exec_always --no-startup-id autotiling
 

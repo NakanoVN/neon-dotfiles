@@ -1,3 +1,6 @@
 #Fonts
-copy the fonts inside ~/neon-dotfiles/rofi/fonts/ to ~/.local/share/fonts/ 
-then type fc-cache -fv
+-- copy the fonts inside ~/neon-dotfiles/rofi/fonts/ to ~/.local/share/fonts/ 
+
+-- and copy the fonts inside ~/neon-dotfiles/polybar/fonts to ~/.local/share/fonts/
+
+-- then type fc-cache -fv
