@@ -238,7 +238,7 @@ gaps outer 15
 
 
 #background apps
-exec_always feh --bg-fill ~/.config/wallpapers/neon/jujutsu-girl.jpg
+exec_always --no-startup-id feh --bg-fill ~/.config/wallpapers/neon/jujutsu-girl.jpg
 #exec_always --no-startup-id killall polybar
 #exec_always --no-startup-id sleep 1 && polybar &
 exec_always --no-startup-id ~/.config/polybar/forest/launch.sh &
