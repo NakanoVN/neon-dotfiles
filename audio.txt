@@ -1,9 +1,21 @@
-#pipewire setting
+## installing tools
+```
+sudo pacman -S pipewire pipewire-pulse pipewire-alsa wireplumber mpv alsamixer rtkit
+(optional) = pipewire-audio
+```
+
+## enabling the service
+```
+sudo systemctl --user enable --now pipewire pipewire-pulse wireplumber
+sudo systemctl enable --now rtkit-daemon.service
+``` 
+
+## pipewire setting
   set volume = wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.75 (sets to 75%)
   volume up = wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ (increases by 5%)
   volume down = wpctl set-volume @DEFAULT_AUDIO_SINK 5%- (decrease by 5%)
 
-#mpv setting
+## mpv setting
   command = mpv --no-video <youtube-url>
   command (loop) = mpv --no-video --loop-file=inf <youtube-url>
 
