@@ -65,8 +65,12 @@ rofi
 polybar
 feh
 alacritty
+autotiling
 xterm
 xcompmgr
+bash
+
+fastfetch
 networkmanager
 neovim
 firefox
@@ -74,6 +78,8 @@ htop
 git
 curl
 wget
+ranger
+zenity
 ```
 
 > ⚠️ Don’t remove any of the default packages!

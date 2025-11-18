@@ -1,0 +1,23 @@
+# 1. install and copy archiso releng into home dir
+# 2. add packages to 'x86_64.packages'
+# 3. enable NetworkManager
+# 4. add fonts
+# 5. add wallpapers
+# 6. configure i3 (rofi + polybar + alacritty)
+# 7. add .xinitrc
+# 8. add .zprofile and .zshrc
+# 9. configure clock and date
+# 10. add tor browser and configure update-disabling patch
+# 11. make sure it boot into root shell instead to archinstall 
+# 12. build the ISO
+# 13. flash the ISO into USB
+
+
+
+
+
+
+
+
+
+
