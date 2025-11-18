@@ -1,0 +1,157 @@
+## 1. Download tor browser from web browser
+# and add 'zenity' tool inside the '~/myarchlive/packages.x86_64' file
+
+---
+
+## 2. Extract the downloaded tor browser file
+```
+-- tar -xvf <tor-browser file>
+```
+
+---
+
+## 3. Copy the tor-browser file into '~/myarchlive/airootfs/opt'
+```
+-- cp -r tor-browser ~/myarchlive/airootfs/opt
+or
+-- install -Dm755 tor-browser ~/myarchlive/airootfs/opt
+
+---
+
+## 4. Copy the 'start-tor-broser.desktop' file to '/usr/share/applications'
+```
+-- mkdir -p ~/myarchlive/airootfs/usr/share/applications
+-- cp ~/myarchlive/airootfs/opt/tor-browser/start-tor-browser.desktop ~/myarchlive/airootfs/usr/share/applications/tor-browser.desktop
+or
+-- install -Dm755 ~/myarchlive/airootfs/opt/tor-browser/start-tor-browser.desktop ~/myarchlive/airootfs/usr/share/applications/tor-browser.desktop
+```
+
+---
+
+## 5. Edit the '/airootfs/usr/share/applications/tor-browser.desktop' file
+```
+-- nano ~/myarchlive/airootfs/usr/share/applications/tor-browser.desktop
+```
+
+# change this inside the file:
+```
+[Desktop Entry]
+Type=Application
+Name=Tor Browser
+GenericName=Tor Browser
+Comment=Tor Browser is a privacy-focused web browser designed to minimize tracking and fingerprinting, using the Tor network to protext your privacy and anonymity
+Exec=sh -c 'cd /opt/tor-browser/Browser && TOR_SKIP_LAUNCH_CHECK=1 ./start-tor-browser --detach'
+Categories=Network;WebBrowser;Security;
+Icon=/opt/tor-browser/Browser/browser/chrome/icons/default/default128.png
+Terminal=false
+```
+
+## 6. Add update-disabling patch
+```
+-- nano ~/myarchlive/airootfs/opt/tor-browser/Browser/defaults/pref/0000-no-updates.js
+```
+
+# add this line inside:
+```
+pref("app.update.auto", false);
+pref("app.update.enabled", false);
+pref("app.update.service.enabled", false);
+pref("app.update.silent", false);
+pref("app.update.staging.enabled", false);
+
+pref("extensions.update.enabled", false);
+pref("extensions.update.autoUpdateDefault", false);
+pref("extensions.update.autoUpdate", false);
+pref("extensions.blocklist.enabled", false);
+
+pref("extensions.systemAddon.update.enabled", false);
+pref("extensions.systemAddon.update.url", "");
+
+pref("extensions.update.background.url", "");
+pref("extensions.update.url", "");
+
+pref("browser.search.update", false);
+```
+
+---
+
+## 7. Edit the 'update-settings.ini' file
+```
+-- nano ~/myarchlive/airootfs/opt/tor-browser/Browser/update-settings.ini
+```
+
+# change this line inside:
+```
+[Settings]
+ACCEPTED_MAR_CHANNEL_IDS=*
+APP_UPDATE_ENABLED=0
+```
+
+---
+
+## 8. Remove the updater binary file
+```
+-- rm -rf /~myarchlive/airoofs/opt/tor-browser/Browser/updater
+-- rm -rf /~myarchlive/airoofs/opt/tor-browser/Browser/updater.ini
+```
+
+---
+
+## 9. Make sure the Tor Browser startup script is executable
+```
+-- chmod +x ~/myarchlive/airootfs/opt/tor-browser/start-tor-browser.desktop
+-- chmod +x ~/myarchlive/airootfs/opt/tor-browser/Browser/start-tor-browser
+-- chmod +x ~/myarchlive/airootfs/opt/tor-browser/Browser/firefox.real
+-- chmod -R +x ~/myarchlive/airootfs/opt/tor-browser
+
+# for 100% guarantee: add a permission fix script in '/airootfs/root/customize_aitoofs.sh':
+```
+-- nano ~/myarchlive/airootfs/root/customize_airootfs.sh
+```
+
+# add this line inside:
+```
+#!/bin/zsh
+chmod -R +x /opt/tor-browser
+```
+
+# make it executable:
+```
+-- chmod +x ~/myarchlive/airootfs/root/customize_airootfs.sh
+```
+
+---
+
+## 10. Fix Tor Browser cannot run as root
+# add the "Allow root execution" patch:
+```
+-- nano ~/myarchlive/airootfs/opt/tor-browser/Browser/start-tor-browser
+```
+
+# comment or remove this line:
+```
+if [ "`id -u`" -eq 0 ]; then
+    complain "Tor Browser should not be run as root. Exiting."
+fi
+```
+
+# and replace it with:
+# Allow running as root in ArchISO (dangerous, but OK for your live ISO)
+```
+export TOR_SKIP_LAUNCH_CHECK=1
+```
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+

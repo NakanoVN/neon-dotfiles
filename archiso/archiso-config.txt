@@ -1,0 +1,352 @@
+# OVERVIEW
+
+You’ll build a custom ArchISO that:
+
+* Boots on both BIOS and UEFI
+* Starts i3wm with polybar, rofi, and feh
+* Has your fonts and wallpaper
+* Completely resets after each boot
+
+---
+
+# STEP-BY-STEP FROM 0
+
+---
+
+## 0️. Prepare your build environment
+
+Do this in an existing Arch install or Arch VM.
+
+```bash
+-- sudo pacman -Syu
+-- sudo pacman -S --needed archiso git base-devel
+```
+
+---
+
+## 1️. Copy the default ArchISO profile
+
+This gives you the base system config used by the official Arch installer.
+
+```bash
+-- cp -r /usr/share/archiso/configs/releng ~/myarchlive
+-- cd ~/myarchlive
+```
+
+> 🧠 `releng` = “release engineering” — includes BIOS & UEFI boot setup.
+
+---
+
+
+## 2. Add your packages to `packages.x86_64`
+
+# Open:
+
+```bash
+-- nano ~/myarchlive/packages.x86_64
+```
+# remove the archinstall (so it boot to shell instead to archinstall)
+
+```
+remove archinstall and archinstall script
+```
+
+# Scroll to the bottom, and append:
+
+```
+# --- custom packages ---
+xorg-server
+xorg-xinit
+xorg-xrandr
+xorg-apps
+i3-wm
+i3lock
+rofi
+polybar
+feh
+alacritty
+xterm
+xcompmgr
+networkmanager
+neovim
+firefox
+htop
+git
+curl
+wget
+```
+
+> ⚠️ Don’t remove any of the default packages!
+> Just add your extras below the existing list.
+
+---
+
+## 3. Enable NetworkManager inside ISO
+
+```bash
+-- mkdir -p ~/myarchlive/airootfs/etc/systemd/system/multi-user.target.wants
+-- ln -sf /usr/lib/systemd/system/NetworkManager.service ~/myarchlive/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service
+```
+
+---
+
+## 4. Add your fonts
+
+```bash
+-- mkdir -p ~/myarchlive/airootfs/usr/share/fonts/myfonts
+-- cp ~/Downloads/*.ttf ~/myarchlive/airootfs/usr/share/fonts/myfonts/
+```
+
+(Optional auto font cache refresh)
+
+```bash
+-- mkdir -p ~/myarchlive/airootfs/etc/profile.d
+-- cat > ~/myarchlive/airootfs/etc/profile.d/fontcache.sh <<'EOF'
+> #!/bin/bash
+> fc-cache -fv >/dev/null 2>&1
+> EOF
+-- chmod +x ~/myarchlive/airootfs/etc/profile.d/fontcache.sh
+```
+
+---
+
+## 5. Add your wallpaper
+
+```bash
+-- mkdir -p ~/myarchlive/airootfs/usr/share/wallpapers
+-- cp ~/Pictures/mywallpaper.jpg ~/myarchlive/airootfs/usr/share/wallpapers
+```
+
+---
+
+## 6. Configure i3 (rofi + polybar + alacritty)
+
+```bash
+-- mkdir -p ~/myarchlive/airootfs/root/.config/i3
+-- cp -r ~/.config/i3 ~/myarchlive/airootfs/root/.config
+-- cp -r ~/.config/rofi ~/myarchlive/airootfs/root/.config
+-- cp -r ~/.config/polybar ~/myarchlive/airootfs/root/.config
+-- cp -r ~/.config/alacritty ~/myarchlive/airootfs/root/.config
+```
+
+---
+
+
+# Add launcher script: (Optional)
+
+```bash
+-- cat > ~/myarchlive/airootfs/root/.config/polybar/launch.sh <<'EOF'
+> #!/bin/bash
+> killall -q polybar
+> while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
+> polybar mybar &
+> EOF
+-- chmod +x ~/myarchlive/airootfs/etc/skel/.config/polybar/launch.sh
+```
+
+---
+
+## 7. Add .xinitrc
+
+```bash
+-- cat > ~/myarchlive/airootfs/root/.xinitrc <<'EOF'
+> exec i3
+> EOF
+```
+
+---
+
+## 8. Build the ISO
+
+```bash
+-- sudo rm -rf ~/myarchlive/work
+-- sudo rm -rf ~/myarchlive/out
+-- sudo mkarchiso -v -w work -o out ~/myarchlive
+```
+
+# Wait until it finishes.
+# You’ll get the ISO at:
+
+```
+~/myarchlive/out/archlinux-*.iso
+```
+
+---
+
+## 9. Flash to USB
+
+Find your USB device (`lsblk`), then:
+
+```bash
+-- sudo wipefs -a /dev/sdb
+-- sudo dd if=/dev/zero of=/dev/sdb bs=1M count=20
+-- sudo dd if=~/myarchlive/out/archlinux-*.iso of=/dev/sdb bs=4M conv=fsync status=progress
+-- sync
+-- sudo eject /dev/sdb
+```
+
+---
+
+## 1️0. Boot your USB
+
+* Works on BIOS and UEFI
+* Network works (`nmtui`, `nmcli`)
+* Everything resets on reboot (amnestic)
+
+---
+
+# ✅ RESULT
+
+| Component          | Purpose                  | Persistent?       |
+| ------------------ | ------------------------ | ----------------- |
+| i3wm               | Tiling window manager    | 🟢 Yes (in image) |
+| rofi               | App launcher             | 🟢 Yes            |
+| polybar            | Status bar               | 🟢 Yes            |
+| feh                | Wallpaper                | 🟢 Yes            |
+| Fonts              | Custom                   | 🟢 Yes            |
+| Configs            | Preloaded in `/root/`    | 🟢 Yes            |
+| Changes after boot | Lost on reboot           | 🔴 No             |
+
+
+### Issues ###
+
+## 1. Booting into archinstall instead to user shell
+
+# step 1
+# remove archinstall
+# edit your 'packages.x86_64' and delete:
+```
+archinstall
+archinstall script
+```
+
+# or force remove it in airootfs:
+```
+-- sudo rm -f ~/myarchlive/airootfs/usr/bin/archinstall
+```
+
+---
+
+# step 2 (optional)
+# delete autostart scripts
+# these scripts trigger the installer environment:
+```
+-- sudo rm -f ~/myarchlive/airootfs/etc/profile.d/airootfs.sh
+-- sudo rm -f ~/myarchlive/airootfs/etc/motd
+```
+
+# also remove this:
+```
+-- sudo rm -f ~/myarchlive/airootfs/usr/bin/archiso
+```
+
+---
+
+# step 3 (Optional)
+# if you want auto-login to i3
+# add this to 'airootfs/etc/systemd/system/getty@tty1.service.d/autologin.conf`:
+```
+[Service]
+ExecStart=
+ExecStart=-/usr/bin/agetty --autologin root --noclear %I 38400 linux
+```
+
+---
+
+# step 4 (Optional)
+# make sure no installer services remain
+# disable them in airootfs:
+```
+sudo rm -f ~/myarchlive/airootfs/etc/systemd/system/multi-user.target.wants/archiso*
+sudo rm -f ~/myarchlive/airootfs/etc/systemd/system/multi-user.target.wants/pacstrap*
+```
+
+---
+
+# ❗ IMPORTANT NOTE
+
+Even though archinstall appears on the GRUB/boot menu,
+your system will NOT launch the installer anymore once you remove:
+
+* `archinstall`
+* `airootfs.sh`
+
+The GRUB entry name cannot be changed unless you edit:
+
+```
+~/myarchlive/grub/grub.cfg
+```
+
+But the system WILL load your custom desktop environment if the installer is disabled.
+
+---
+
+## 2. Correcting time and date
+
+# step 1
+# enables NTP on boot
+# inside your ArchISO build folder, add this:
+```
+-- mkdir -p ~/myarchlive/airootfs/etc/systemd/system/multi-user.target.wants
+-- ln -sf /usr/lib/systemd/system/systemd-timesyncd.service ~/myarchlive/airootfs/etc/systemd/system/multi-user.target.wants/systemd-timesyncd.service
+``` 
+
+---
+
+# step 2
+# ensure '/etc/systemd/timesyncd.conf' exists
+```
+-- nano ~/myarchlive/airootfs/etc/systemd/timesyncd.conf
+```
+
+# add:
+```
+[Time]
+NTP=0.arch.pool.ntp.org 1.arch.pool.ntp.org
+FallbackNTP=2.arch.pool.ntp.org 3.arch.pool.ntp.org
+```
+
+-- 
+
+
+# check the timedatectl and systemd-timesyncd.service
+```
+-- timedatectl
+-- systemctl status systemd-timesyncd
+```
+
+# if you see this
+# it's good 
+```
+NTP service: active
+System clock synchronized: yes
+RTC in local TZ: no
+```
+---
+
+# the timezone is wrong
+# make sure the timezone is Jakarta 
+```
+-- ls /usr/share/zoneinfo/Asia/Jakarta
+```
+
+# fix the timezone inside the ISO
+```
+-- ln -sf /usr/share/zoneinfo/Asia/Jakarta ~/myarchlive/airootfs/etc/localtime
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

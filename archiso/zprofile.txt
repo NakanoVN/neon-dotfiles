@@ -1,0 +1,93 @@
+### For ZSH, the autostart file is:
+
+```
+~/.zprofile
+```
+
+NOT `.bash_profile`.
+
+---
+
+## FIX: Create `.zprofile` inside your ArchISO
+
+```
+-- nano ~/myarchlive/airootfs/root/.zprofile
+```
+
+# Add:
+
+```zsh
+#!/bin/zsh
+
+# Autostart X only on tty1
+if [[ "$(tty)" == "/dev/tty1" ]]; then
+    startx
+fi
+```
+
+# Make sure permissions are correct:
+
+```
+-- chmod 644 ~/myarchlive/airootfs/root/.zprofile
+```
+
+---
+
+# Still need .xinitrc
+# Inside:
+
+```
+~/myarchlive/airootfs/root/.xinitrc
+```
+
+# Put:
+
+```
+exec i3
+```
+
+---
+
+# Very important
+
+# ArchISO root must have zsh as login shell:
+# Check:
+
+```
+-- nano ~/myarchlive/airootfs/etc/passwd
+```
+
+# Root should look like:
+
+```
+root:x:0:0::/root:/usr/bin/zsh
+```
+
+# If not, change it.
+
+---
+
+# If you use `.bash_profile` while using zsh → it will NEVER work
+
+# Only `.zprofile` is sourced on login.
+
+---
+
+# 🎉 Result
+
+After you add `.zprofile` + `.xinitrc`, your ISO will:
+
+* Boot to tty1
+* Automatically call `startx`
+* Launch i3
+* No need to type anything
+
+--------
+
+### For shell configuration
+## use .zshrc (in bash it use .bashrc)
+# add the config inside
+# example:
+```
+-- alias v='vim'
+```
