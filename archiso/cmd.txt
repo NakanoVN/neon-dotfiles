@@ -1,0 +1,6 @@
+sudo rm -rf ~/myarchlive/work
+sudo rm -rf ~/myarchlive/out
+sudo mkarchiso -v -w work -o out ~/myarchlive
+sudo wipefs -a /dev/sdb
+sudo dd if=/dev/zero of=/dev/sdb bs=1M count=20
+sudo dd if=~/myarchlive/out/archlinux-2025.11.14-x86_64.iso of=/dev/sdb bs=4M conv=fsync status=progress

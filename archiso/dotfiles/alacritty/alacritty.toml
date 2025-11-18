@@ -1,0 +1,22 @@
+[window]
+opacity = 0.9
+
+
+[colors.primary]
+foreground = '#eba0ac'
+background = '#1e1e2e'
+
+[font.normal]
+family = "DejaVuSansM Nerd Font"
+style = "bold"
+
+[cursor]
+thickness = 0.30
+unfocused_hollow = false
+
+[cursor.style]
+shape = "beam"
+
+
+
+

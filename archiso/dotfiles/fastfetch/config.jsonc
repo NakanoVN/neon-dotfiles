@@ -1,0 +1,78 @@
+{
+  "logo": {
+    "source": "/home/jiyo/.config/fastfetch/ascii/neko4.txt", 
+    "type": "auto",
+    "color": {
+      "1": "#cba6f7"
+    },
+  },
+
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
+  "modules": [
+    {
+      "type": "os",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "host",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "kernel",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "uptime",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "packages",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "separator",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "shell",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "display",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "wm",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "terminal",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "terminalfont",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "separator",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "cpu",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "gpu",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "memory",
+      "keyColor": "#cba6f7"
+    },
+    {
+      "type": "disk",
+      "keyColor": "#cba6f7"
+    }
+  ]
+}
+
