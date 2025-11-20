@@ -20,3 +20,8 @@ lavender: #b7bdf8
 #dark colors
 black: #000000
 
+--- simple archiso ---
+green: #40a02b
+pink: #ea76cb
+foreground: #b7bdf8 
+
